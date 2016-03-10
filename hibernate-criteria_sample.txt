@@ -1,0 +1,86 @@
+@Override
+	public List<CommitteeContactDetails> searchCommitteeContacts(String committeeId,String name,
+																 String startsWith, String controlFunctionId, 
+																 String contactGrpId,String involvementRole,
+																 List<String> govCommitteeList) throws IPASDaoException 
+	{
+		List <CommitteeContactDetails> committeeContacts = null;
+		Session session = this.ipasSessionFactory.getCurrentSession();
+		//Query query=null;
+		try {
+			/*String searchQuery="SELECT CCD.*,GCD.GOV_COMMITTEE_ID,GCD.IPAS_ROLE_ID,"
+					+ "GCD.TRACK_TYPE_ID,GCD.IS_REVIEW_APPROVER,GCD.ACTUAL_ROLE,GCD.INVOLVEMENT_ROLE,"
+					+ "GCD.LEFT_ROLE,GCD.CONTROL_FUNCTION_ID FROM COMMITTEE_CONTACT_DETAILS CCD ,"
+					+ "LKP_GOV_COMMITTEE_CONTACTS GCD WHERE "
+					+ "CCD.CONTACT_DETAILS_ID=GCD.COMMITTEE_CONTACT_DETAILS_ID "
+					+ "AND CCD.IS_DELETED='N'";
+			
+			if (name!=null)
+				if(startsWith.equalsIgnoreCase(IPASConstants.C_YES_INDICATOR))
+					searchQuery+=" AND CCD.NAME LIKE "+name+"%";
+				else
+					searchQuery+=" AND CCD.NAME LIKE "+"%"+name+"%";
+			
+			if(controlFunctionId!=null)
+				searchQuery+=" AND GCC.CONTROL_FUNCTION_ID="+controlFunctionId;
+			
+			if(contactGrpId!=null)
+				searchQuery+=" AND CCD.CONTACT_GROUP_ID="+contactGrpId;
+			
+			if(involvementRole!=null)
+				searchQuery+=" AND GCC.INVOLVEMENT_ROLE="+involvementRole;*/
+			
+			//query=session.createSQLQuery(searchQuery);
+			//committeeContacts = query.list();
+			Criteria criteria=session.createCriteria(CommitteeContactDetails.class,"ccd")
+								.createAlias("ccd.govCommitteeContact", "gcc",Criteria.LEFT_JOIN)
+								//.setFetchMode("gcc", FetchMode.JOIN)
+								.createAlias("ccd.committee","c")
+								.setFetchMode("c", FetchMode.JOIN)
+								.add(Restrictions.eq("ccd.isDeleted", "N"))
+								.add(Restrictions.eq("c.committeeId", committeeId));
+								
+			if (name!=null && name.length()!=0){
+				criteria.createAlias("ccd.user", "u");
+				Criterion aliasSrch=Restrictions.like("ccd.alias", name,MatchMode.ANYWHERE);
+				Criterion nameSrch=Restrictions.like("ccd.fullName", name.toUpperCase(),MatchMode.ANYWHERE);
+				Criterion soeIdSrch=Restrictions.like("u.userSoeId", name.toUpperCase(),MatchMode.ANYWHERE);
+				
+				criteria.add(Restrictions.disjunction()
+							 .add(aliasSrch)
+							 .add(nameSrch)
+							 .add(soeIdSrch));
+			}
+				//if(startsWith.equalsIgnoreCase(IPASConstants.C_YES_INDICATOR))
+									//else
+				//	criteria.add(Restrictions.like("ccd.fullName",name.toUpperCase(),MatchMode.ANYWHERE));		
+			
+			if(contactGrpId!=null && contactGrpId.length()!=0)
+				criteria.add(Restrictions.like("ccd.contactGroup", contactGrpId,MatchMode.ANYWHERE));
+			
+			if(controlFunctionId!=null && controlFunctionId.length()!=0){
+				criteria.createAlias("gcc.governingCommitteeContactCFs","gcf")
+						.createAlias("gcf.controlFunction","cf")
+						.add(Restrictions.eq("cf.controlFunctionID",controlFunctionId));
+			}
+				
+			
+			if(involvementRole!=null && involvementRole.length()!=0)
+				criteria.add(Restrictions.like("gcc.involvementRole", involvementRole,MatchMode.ANYWHERE));
+			
+			if (govCommitteeList!=null && govCommitteeList.size()!=0)
+				criteria.createAlias("gcc.govCommittee","gc")
+				.add(Restrictions.in("gc.governingCommitteeID", govCommitteeList));
+			
+			committeeContacts=criteria.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY).list();
+			//ProjectionList projList = Projections.projectionList();
+			//projList.add(Projections.property("gcc.govCommitteeContactId"));
+			//committeeContacts=criteria.setProjection(Projections.distinct(projList));
+					
+		} catch (Exception ex) 
+		{
+			log.error("ERROR Occured while Fetching Committee Contacts");
+			 throw new IPASDaoException(ex);
+		}
+        return committeeContacts;
+	}
