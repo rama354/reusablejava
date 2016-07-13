@@ -1,0 +1,178 @@
+
+HQL Join
+ 
+<!-- <query name="searchCommitteeContacts">
+              <![CDATA[select ccd FROM CommitteeContactDetails As ccd inner join ccd.govCommitteeContact as gcc
+                          WHERE
+                          ccd.contactDetailsId=gcc.committeeContactDetails
+                          and ccd.fullName like :name
+                           and ccd.isDeleted = 'N'
+                            and ccd.contactGroup.contactGroupID = :contactGrpId
+                           and gcc.controlFunctionId =:controlFunctionId
+                           and gcc.involvementRole=:involvementRole
+                ]]>
+       </query> -->
+-----------------------------------------------------------------------------------------------------------------
+Criteria criteria=session.createCriteria(CommitteeContactDetails.class,"ccd")
+                                           .createAlias("ccd.govCommitteeContact", "gcc")
+                                           .setFetchMode("gcc", FetchMode.JOIN)
+                                           .createAlias("ccd.committee","c")
+                                           .setFetchMode("c", FetchMode.JOIN)
+                                           .add(Restrictions.eq("c.committeeId", committeeId));
+               
+                if (name!=null)
+                     if(startsWith.equalsIgnoreCase(IPASConstants.C_YES_INDICATOR))
+                           criteria.add(Restrictions.eq("ccd.fullName", name+"%"));
+                     else
+                           criteria.add(Restrictions.eq("ccd.fullName", "%"+name+"%"));      
+               
+                if(contactGrpId!=null)
+                     criteria.add(Restrictions.eq("ccd.contactGroup.contactGroupID", contactGrpId));
+               
+                if(controlFunctionId!=null)
+                     criteria.add(Restrictions.eq("gcc.controlFunctionId", controlFunctionId));
+               
+                if(involvementRole!=null)
+                     criteria.add(Restrictions.eq("gcc.involvementRole", involvementRole));
+               
+               
+                committeeContacts = criteria.list();
+ 
+ 
+--------------------------------------------------------------------------------------------
+@Override
+     public String getLKPValuebyId(String committeeId, Class lkpClass,
+                                                                     String lkpid) throws IPASDaoException
+     {
+           Session session = this.ipasSessionFactory.getCurrentSession();
+           String tableName=null;
+           String idColumn=null;
+           String valueColumn=null;
+           try{
+                ClassMetadata hibernateMetadata = ipasSessionFactory.getClassMetadata(lkpClass);
+                if (hibernateMetadata instanceof AbstractEntityPersister)
+                {
+                     AbstractEntityPersister persister = (AbstractEntityPersister) hibernateMetadata;
+                     tableName = persister.getTableName();
+                     idColumn=persister.getPropertyColumnNames(persister.getIdentifierPropertyName())[0]; ///will not work for composite keys
+                }
+                       
+                valueColumn=idColumn.substring(0,idColumn.lastIndexOf('_'))+"_NAME";
+                /*Table table=Entity.class.getAnnotation(Table.class);
+                tableName=table.name();
+                JsonProperty property=Entity.class.getAnnotation(JsonProperty.class);
+                */
+                String sql="select "+valueColumn+" from "+tableName+" where "+idColumn+"=:lkpid and committee_id=:committeeId";
+                System.out.println(sql);
+    
+                SQLQuery query=session.createSQLQuery(sql);
+                //query.setParameter("valueColumn", valueColumn);
+                //query.setParameter("tableName", tableName);
+                query.setParameter("committeeId", committeeId);
+                query.setParameter("lkpid", lkpid);
+                List<Object> resultset=query.list();
+                if (resultset.size()==1)
+                     return (String) resultset.get(0);
+                else
+                     return null;
+           }
+           catch (Exception e) {
+                log.error("Error doing lookup");
+                throw new IPASDaoException(e);
+           }
+     }
+--------------------------------------------------------------
+ 
+ 
+You need to enable logging for the the following categories at debug and trace levels respectively:
+·         org.hibernate.SQL   - Log all SQL DML statements as they are executed
+·         org.hibernate.type - Log all JDBC parameters
+So a log4j configuration could look like:
+
+# logs the SQL statements
+log4j.logger.org.hibernate.SQL=debug 
+ 
+# Logs the JDBC parameters passed to a query
+log4j.logger.org.hibernate.type=trace 
+The first is equivalent to hibernate.show_sql=true legacy property, the second prints the bound parameters among other things.
+ 
+ 
+ 
+Hibernate multilevel  child   persistence
+ 
+Aà B is unidirectional @oneotmany
+B -> C is bidirectional @manytoone
+A,B persists using session.save(A) but C doesn’t
+----------------------------------------------------------------------------------------------------------
+package com.ipas.bootstrap;
+
+ 
+
+import javax.annotation.PostConstruct;
+
+import javax.servlet.ServletContext;
+
+import javax.sql.DataSource;
+
+ 
+
+import org.springframework.beans.BeansException;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
+import org.springframework.jdbc.core.JdbcTemplate;
+
+import org.springframework.jdbc.support.nativejdbc.CommonsDbcpNativeJdbcExtractor;
+
+import org.springframework.jdbc.support.nativejdbc.WebSphereNativeJdbcExtractor;
+
+import org.springframework.stereotype.Component;
+
+ 
+
+@Component
+
+public class IPASJdbcTemplate extends JdbcTemplate {
+
+            @Autowired
+
+            private ServletContext servletContext;
+
+           
+
+            @Autowired
+
+            private DataSource dataSource;
+
+ 
+
+            @Autowired
+
+            public IPASJdbcTemplate(DataSource dataSource) {
+
+                        super(dataSource);
+
+            }
+
+ 
+
+            @PostConstruct
+
+            public void setServerBasedJDBCExtractor() throws BeansException {
+
+                        String nameServer = servletContext.getServerInfo();
+
+                        if (nameServer.contains("Tomcat")) {
+
+                                    super.setNativeJdbcExtractor(new CommonsDbcpNativeJdbcExtractor());
+
+                        } else if (nameServer.contains("WebSphere")) {
+
+                                    super.setNativeJdbcExtractor(new WebSphereNativeJdbcExtractor());
+
+                        }
+
+            }
+
+}
+ 
