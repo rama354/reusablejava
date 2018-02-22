@@ -1,0 +1,59 @@
+netstat -lan | grep 5701(hazelcast port)
+
+netstat -lan | grep 5269(XMPP port)
+
+netstat -lnp
+
+
+systemctl stop firewalld.service   (rhel7)
+
+mvn clean package -Dmaven.repo.local=/opt/Avaya/repo -s settings.xml -PAMM
+
+wget --user r79 --password K@rtik85 --no-check-certificate https://bamboo.forge.avaya.com/browse/CAS-AMMPACKAGING2-350/artifact/JOB1/amm-BIN/amm-3.3.0.0.350.bin
+
+148.147.232.42
+
+
+git cmds
+
+git clone --bare https://github.com/wildthing81/examprep.git
+
+git push --mirror https://github.com/wildthing81/techforum.git
+
+
+debug_cmds
+
+-Xdebug -Xrunjdwp:transport=dt_socket,address=8787,server=y,suspend=n"(JDK 1.5)
+
+-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=6006 (new JDK)
+
+
+file/directory cmds
+
+jar uf jar-file input-file(s)
+
+zip -d authenticator-tomcat-3.0.0.1-SNAPSHOT.jar home/avaya/CachingJNDIRealm.class
+
+mkdir -p com/avaya/cas/realm
+
+
+HTTP request cmds
+
+wget --no-check-certificate --user=17774441877@gsc.com --ask-password https://ott253-94.cnda.avaya.com:8443/aem/resources/users/17774441878@gsc.com/conversations -O test.txt
+
+wget --no-check-certificate --user=17774441878@gsc.com --ask-password --certificate=cert.pem https://ott253-94.cnda.avaya.com:8443/aem/resources/ -O test.json
+
+wget --no-check-certificate --user=17774441878@gsc.com --ask-password --certificate=cert.pem https://ott253-94.cnda.avaya.com:8443/aem/resources/
+
+curl -u 17774441878@gsc.com:12345  https://ott253-94.cnda.avaya.com:8443/aem/resources/  --cert cert.pem
+
+
+SSL cmd
+
+openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -keyout key.pem -out cert.pem (generate)
+
+openssl x509 -text -inform DER -in cert.pem (see output)
+
+openssl pkcs12 -in ott253-94.p12 -out ott253-94.pem -nodes
+
+openssl x509 -inform der -in cert.crt -out cert.pem
