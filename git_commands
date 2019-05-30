@@ -1,0 +1,26 @@
+
+git diff --cached  diff staged files
+git commit --amend  add files to existing commit
+git reset --soft    resets local workspace
+git pull -r   pull and rebase
+git pull -r upstream <branch> rebase another branch onto yours
+git checkout <commit-id> put HEAD at commit-id
+git rev-parse Head  displays HEAD id
+git revert <commit id> ????
+git reset --hard HEAD~1 ???
+git rm --cached <filepath> unstage/remove from index new file. keeps in local workspace though
+
+git config --global --unset http.proxy
+git config --global --unset https.proxy
+git config --global http.proxy http://newproxy.tnet.internal:8080/
+git config --global https.proxy http://newproxy.tnet.internal:8080/
+git config --global user.name "<bitbucket_username>"
+
+git remote add upstream https://<username>@bitbucket.org/target-ondemand/ocr.git
+git branch  show current branch
+git branch -vv    show remote tracking detaisl
+
+git clean -n  list untracked files that will be removed
+git clean -f removes untracked files
+
+git push upstream +dca33270^:ram/master  deletes remote commit
