@@ -16,11 +16,14 @@ git config --global http.proxy http://newproxy.tnet.internal:8080/
 git config --global https.proxy http://newproxy.tnet.internal:8080/
 git config --global user.name "<bitbucket_username>"
 
-git remote add upstream https://<username>@bitbucket.org/target-ondemand/ocr.git
-git branch  show current branch
-git branch -vv    show remote tracking detaisl
+git remote set-url origin <url> add/update remote repository 
+git remote add upstream <url>.   add remote repository if doesn’t exist
+git branch       show current branch
+git branch -vv        show remote tracking detaisl
 
 git clean -n  list untracked files that will be removed
 git clean -f removes untracked files
 
 git push upstream +dca33270^:ram/master  deletes remote commit
+
+
